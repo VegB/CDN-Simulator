@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <string>
 #include <cstdlib>
 #include <vector>
@@ -15,9 +16,12 @@
 using namespace std;
 
 #define MAX 10
+#define INF 1000000
 
 // the graph
-bool connected[MAX][MAX] = {0};
+int Distance[MAX][MAX];
+int pre[MAX][MAX];
+int node_num = 0;
 
 /*
  Load all content servers' IP.
@@ -28,7 +32,7 @@ bool connected[MAX][MAX] = {0};
  * Returns:
      a vector<string> that stores all IP.
  */
-void LoadServersIP(string filepath, vector<string>& server_ips){
+vector<string> LoadServersIP(string filepath){
     vector<string> server_ips;
     string ip;
     ifstream fin;
@@ -47,7 +51,7 @@ void LoadServersIP(string filepath, vector<string>& server_ips){
  Called by LoadLSA().
  
  * Parameters:
-     - s: a string that might contains multiple ips connected by a char
+     - s: a string that might contains multiple ips Distance by a char
      - c: should be ','
  
  * Returns:
@@ -57,7 +61,7 @@ vector<string> split(const string& s, const char& c){
     string buff = "";
     vector<string> v;
     
-    for(int i = 0;i < s.length(); ++i){
+    for(int i = 0; i < s.length(); ++i){
         if(s[i] != c){
             buff+=s[i];
         }
@@ -87,8 +91,9 @@ map<string, int> LoadLSA(string filepath){
     map<string, int> store;
     // keep record of time sequence of lsa, <key: node, value: its most recent time_stamp>
     map<string, int> lsa_time_stamp;
+    pair<map<string, int>::iterator, bool> rtn;
     string node, tmp_neighbors;
-    int time_stamp, id = 0;
+    int time_stamp;
     ifstream fin;
     fin.open(filepath);
     
@@ -107,10 +112,10 @@ map<string, int> LoadLSA(string filepath){
         /* record all nodes */
         neighbors.push_back(node);  // add node into loop below
         for(vector<string>::iterator i = neighbors.begin(); i != neighbors.end(); ++i){
-            pair<map<string, int>::iterator, bool> rtn = store.insert(make_pair(*i, id));
+            pair<map<string, int>::iterator, bool> rtn = store.insert(make_pair(*i, node_num));
             if(rtn.second == true){  // this node appears for the first time
-                id++;
-                if(id >= MAX){
+                node_num++;
+                if(node_num >= MAX){
                     cerr << "[Nameserver]: Graph too small to store all nodes!" << endl;
                 }
             }
@@ -118,16 +123,65 @@ map<string, int> LoadLSA(string filepath){
         neighbors.pop_back();  // remove node from its own neighbors
         
         /* update graph */
-        for(int i = 0; i < MAX; ++i){
-            connected[store[node]][i] = 0;
+        for(int i = 0; i < node_num; ++i){
+            Distance[store[node]][i] = INF;
+            Distance[i][store[node]] = INF;
         }
         for(vector<string>::iterator i = neighbors.begin(); i != neighbors.end(); ++i){
-            connected[store[node]][store[*i]] = 1;
+            Distance[store[node]][store[*i]] = 1;
+            Distance[store[*i]][store[node]] = 1;
         }
     }
     fin.close();
     
+    /* Floyd */
+    for(int i = 0; i < node_num; ++i){
+        for(int j = 0; j < node_num; ++j){
+            if(i == j){
+                Distance[i][j] = 0;
+            }
+            if(i == j || Distance[i][j] < INF){
+                pre[i][j] = i;
+            }
+            else if(Distance[i][j] == INF){
+                pre[i][j] = -1;
+            }
+        }
+    }
+    for(int i = 0; i < node_num; ++i){
+        for(int j = 0; j < node_num; ++j){
+            for(int k = 0;k < node_num; ++k){
+                if(Distance[i][j] > Distance[i][k] + Distance[k][j]){
+                    Distance[i][j] = Distance[i][k] + Distance[k][j];
+                    pre[i][j] = pre[k][j];
+                }
+            }
+        }
+    }
     return store;
+}
+
+void init_Distance(){
+    for(int i = 0; i < MAX; ++i){
+        for(int j = 0; j < MAX; ++j){
+            Distance[i][j] = INF;
+        }
+    }
+}
+
+void print_Distance(map<string, int> nodes){
+    cout << "[Nameserver]: Printing Graph details." << endl;
+    cout << "Nodes and id: " << endl;
+    for(map<string, int>::iterator i = nodes.begin(); i != nodes.end(); ++i){
+        cout << i->first << ": " << i->second << endl;
+    }
+    cout << "Distance: " << endl;
+    for(int i = 0; i < node_num; ++i){
+        for(int j = 0; j < node_num; ++j){
+            cout << setw(5) << Distance[i][j] << " ";
+        }
+        cout << endl;
+    }
 }
 
 int main(int argc, char* argv[]){
@@ -138,15 +192,15 @@ int main(int argc, char* argv[]){
     /* Read in parameters */
     if(argc == 6 || argc == 7){  // no '-r'
         if(argc == 7){
-            if(strcmp(r, "-r") != 0){
-                cerr << "[Nameserver]: Wrong parameter '"<< r << "', expect '-r'." << endl;
+            if(strcmp(argv[1], "-r") != 0){
+                cerr << "[Nameserver]: Wrong parameter '"<< argv[1] << "', expect '-r'." << endl;
             }
             else{
                 use_round_robin = YES;
             }
         }
         log_path = argv[argc - 5];
-        req_ip = argv[argc - 4]
+        req_ip = argv[argc - 4];
         allocated_port = atoi(argv[argc - 3]);
         server_ip_filepath = argv[argc - 2];
         lsa_filepath = argv[argc - 1];
@@ -159,6 +213,10 @@ int main(int argc, char* argv[]){
     /* Load server replicas' IP */
     vector<string> server_ips = LoadServersIP(server_ip_filepath);
     
-    /* Get LSA info and build up a graph with distance info */
+    /* Get LSA info and build up a graph with Distance info */
+    init_Distance();
     map<string, int> nodes = LoadLSA(lsa_filepath);
+#ifdef DEBUG
+    print_Distance(nodes);
+#endif
 }
