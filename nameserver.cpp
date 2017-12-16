@@ -55,7 +55,7 @@ int handle_request(int fd){
     string selected_server = select_server(src_url, nodes,
                                            server_ips, use_round_robin);
     // LOGGING
-	cout << "time " << req_ip << " " << src_ip << " " << selected_server << endl;
+	cout << "time " << req_ip << " " << src_url << " " << selected_server << endl;
     /* Create response */
     init_dns_request(response, selected_server.c_str());
     dns_packet_to_char(response, buffer);

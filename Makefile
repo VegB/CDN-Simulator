@@ -9,10 +9,15 @@ CC = g++
 CFLAGS = -g -Wall
 LDFLAGS = -lpthread
 
-all: nameserver
+all: nameserver proxy
 
 csapp.o: csapp.c csapp.h
 	$(CC) $(CFLAGS) -c csapp.c
+
+proxy.o: proxy.c csapp.h
+	$(CC) $(CFLAGS) -c proxy.c
+
+proxy: proxy.o csapp.o
 
 dns_helper.o: dns_helper.cpp dns_helper.hpp
 	$(CC) $(CFLAGS) -c dns_helper.cpp
