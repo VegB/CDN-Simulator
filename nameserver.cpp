@@ -49,12 +49,13 @@ int handle_request(int fd){
         return -1;
     }
     char_to_dns_packet(buffer, request);
-    string src_ip(request.ip);
+    string src_url(request.url);
     
     /* Select server to return */
-    string selected_server = select_server(src_ip, nodes,
+    string selected_server = select_server(src_url, nodes,
                                            server_ips, use_round_robin);
-    
+    // LOGGING
+	cout << "time " << req_ip << " " << src_ip << " " << selected_server << endl;
     /* Create response */
     init_dns_request(response, selected_server.c_str());
     dns_packet_to_char(response, buffer);
