@@ -23,6 +23,9 @@ int Distance[MAX][MAX];
 int pre[MAX][MAX];
 int node_num = 0;
 
+// round-robin
+vector<string>::iterator tmp_server;
+
 /*
  Load all content servers' IP.
  
@@ -184,6 +187,42 @@ void print_Distance(map<string, int> nodes){
     }
 }
 
+/*
+ Select which server to handle request.
+ 
+ * Parameters:
+    - src_ip: IP of the client that sends the request
+    - nodes: <key: IP, value id>, used to turn ip into index in Distance[][]
+    - server_ips: IP of all available servers
+    - use_round_robin: whether to use round-robin or select based on distance
+
+ * Returns:
+     the ip of the selected server
+ */
+string select_server(string src_ip, map<string, int> nodes,
+                     vector<string> server_ips, int use_round_robin){
+    string rst;
+    /* Round_robin */
+    if(use_round_robin == YES){
+        rst = *tmp_server;
+        tmp_server++;
+        if(tmp_server == server_ips.end()){
+            tmp_server = server_ips.begin();
+        }
+    }
+    /* Distance based selection */
+    else{
+        int min_dist = INF;
+        for(vector<string>::iterator i = server_ips.begin(); i != server_ips.end(); ++i){
+            if(Distance[nodes[src_ip]][nodes[*i]] < min_dist){
+                rst = *i;
+                min_dist = Distance[nodes[src_ip]][nodes[*i]];
+            }
+        }
+    }
+    return rst;
+}
+
 int main(int argc, char* argv[]){
     int use_round_robin = NO;
     int allocated_port;
@@ -193,7 +232,8 @@ int main(int argc, char* argv[]){
     if(argc == 6 || argc == 7){  // no '-r'
         if(argc == 7){
             if(strcmp(argv[1], "-r") != 0){
-                cerr << "[Nameserver]: Wrong parameter '"<< argv[1] << "', expect '-r'." << endl;
+                cerr << "[Nameserver]: Wrong parameter '"
+                    << argv[1] << "', expect '-r'." << endl;
             }
             else{
                 use_round_robin = YES;
@@ -206,12 +246,14 @@ int main(int argc, char* argv[]){
         lsa_filepath = argv[argc - 1];
     }
     else{
-        cerr << "[Nameserver]: Wrong number of parameters. Please input '[-r] <log> <ip> <port> <servers> <LSAs>'." << endl;
+        cerr << "[Nameserver]: Wrong number of parameters. \
+                Please input '[-r] <log> <ip> <port> <servers> <LSAs>'." << endl;
         return 0;
     }
     
     /* Load server replicas' IP */
     vector<string> server_ips = LoadServersIP(server_ip_filepath);
+    tmp_server = server_ips.begin();  // used in round-robin
     
     /* Get LSA info and build up a graph with Distance info */
     init_Distance();
@@ -219,4 +261,7 @@ int main(int argc, char* argv[]){
 #ifdef DEBUG
     print_Distance(nodes);
 #endif
+    
+    /* Select server to return */
+    string selected_server = select_server(use_round_robin);
 }
