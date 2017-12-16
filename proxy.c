@@ -379,7 +379,8 @@ int open_clientfd_bind_fake_ip(char *hostname, char *port, char *fake_ip) {
     hints.ai_flags |= AI_ADDRCONFIG;  /* Recommended for connections */
     if(dns == 1){
         resolve(hostname, port, &hints, &listp);
-    }
+		cout << ((sockaddr_in*)(listp->ai_addr))->sin_addr.s_addr;
+}
     else{
         Getaddrinfo(hostname, port, &hints, &listp);
     }
