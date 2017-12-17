@@ -25,9 +25,13 @@ int init_mydns(const char *dns_ip, unsigned int dns_port, const char *client_ip)
     << ", client_ip: " << client_ip << endl;
     char port[BUFFER_SIZE];
     sprintf(port, "%d", dns_port);
-    strcpy(my_ip, client_ip);
-    clientfd = open_clientfd((char*)dns_ip, (char*)dns_port);
-    if(clientfd == -1){
+	cout << 1 << endl;
+	strcpy(my_ip, client_ip);
+	cout << 2 << endl;
+    cout << "dns_ip: " << dns_ip << ", dns_port: " << dns_port << endl;
+	clientfd = Open_clientfd((char*)dns_ip, (char*)port);
+	cout << 3 << endl;
+	if(clientfd == -1){
         return -1;
     }
     return 0;
