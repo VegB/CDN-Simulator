@@ -187,7 +187,7 @@ void print_Distance(map<string, int> nodes){
  the ip of the selected server
  */
 string select_server(string src_ip, map<string, int> nodes,
-                     vector<string> server_ips, int use_round_robin){
+                     vector<string>& server_ips, int use_round_robin){
     cout << "[Nameserver]: select_server()" << endl;
     cout << "[Nameserver]: Client IP: " << src_ip << endl;
     string rst;
