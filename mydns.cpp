@@ -69,6 +69,8 @@ int resolve(const char *node, const char *service,
     DNS_Packet request, response;
     rio_t rio;
     
+	signal(SIGPIPE, SIG_IGN);
+
     (*res) = (addrinfo*) malloc(sizeof(addrinfo));
     (*res)->ai_flags = AI_PASSIVE;
     (*res)->ai_family = AF_INET;
@@ -96,7 +98,7 @@ int resolve(const char *node, const char *service,
     while(rio_readnb(&rio, buffer, sizeof(struct DNS_Packet)) > 0) {
         char_to_dns_packet(buffer, response);
     }
-    close(clientfd);
+    // close(clientfd);
     cout << "[mydns]: received response from " << response.src_addr << endl;
     
     /* store result into res */
@@ -113,7 +115,9 @@ int resolve(const char *node, const char *service,
  * @return 0 on success, -1 otherwise
  */
 int mydns_freeaddrinfo(struct addrinfo *p){
-    if(p->ai_addr != NULL){
+    close(clientfd);
+
+	if(p->ai_addr != NULL){
         free(p->ai_addr);
     }
     if(p != NULL){

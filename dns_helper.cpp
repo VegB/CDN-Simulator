@@ -8,7 +8,7 @@
 #include "dns_helper.hpp"
 
 
-#define MAX 10
+#define MAX 30
 #define INF 1000000
 
 // the graph
@@ -234,7 +234,7 @@ void init_dns_response(DNS_Packet& packet, const char* src_addr, const char* ip)
 /* Initialize a packet used for communication between DNS server and client side */
 void init_dns_header(DNS_Packet& packet, int is_request){
     DNS_Header* header = &(packet.header);
-    memset(header, 0, sizeof(struct DNS_Header));
+    memset(&packet, 0, sizeof(struct DNS_Packet));
     header->AA = '0';
     header->RD = '0';
     header->RA = '0';
@@ -264,12 +264,12 @@ void dns_packet_to_char(DNS_Packet& packet, char* buffer){
     // avoid early truncate.
     for(int i = sizeof(struct DNS_Header); i < sizeof(struct DNS_Packet); ++i){
         if(buffer[i] < 33 || buffer[i] > 122){
-            buffer[i] = 1;
+            buffer[i] = ' ';
         }
     }
 	buffer[sizeof(struct DNS_Packet)] = 0;
     
-    cout << "dns_packet_to_char()" << endl;
+    /*cout << "dns_packet_to_char()" << endl;
     cout << "packet size = " << sizeof(struct DNS_Packet) << endl;
 	cout << "buffersize = " << strlen(buffer) << endl;
     cout << "    buffer: " << buffer << endl;
@@ -278,11 +278,11 @@ void dns_packet_to_char(DNS_Packet& packet, char* buffer){
     p += 20;
     cout << "    ip: " << p << endl;
     p += 20;
-    cout << "    url: " << p << endl;
+    cout << "    url: " << p << endl;*/
 }
 
 void char_to_dns_packet(char* buffer, DNS_Packet& packet){
-    cout << "dns_packet_to_char()" << endl;
+    /*cout << "char_to_dns_packet()" << endl;
     cout << "buffersize = " << strlen(buffer) << endl;
     cout << "    buffer: " << buffer << endl;
     char* p = buffer + sizeof(struct DNS_Header);
@@ -290,15 +290,15 @@ void char_to_dns_packet(char* buffer, DNS_Packet& packet){
     p += 20;
     cout << "    ip: " << p << endl;
     p += 20;
-    cout << "    url: " << p << endl;
+    cout << "    url: " << p << endl;*/
     
     for(int i = sizeof(struct DNS_Header); i < sizeof(struct DNS_Packet); ++i){
-        if(buffer[i] == 1){
+        if(buffer[i] == ' '){
             buffer[i] = 0;
         }
     }
-    memcpy((void*)buffer, (const void*)(&packet), sizeof(packet));// avoid early truncate.
-    cout << "src_addr" << packet.src_addr << endl;
+    memcpy((void*)(&packet), (const void*)buffer, sizeof(packet));// avoid early truncate.
+    /*cout << "src_addr" << packet.src_addr << endl;
     cout << "ip: " << packet.ip << endl;
-    cout << "url: " << packet.url << endl;
+    cout << "url: " << packet.url << endl;*/
 }

@@ -50,13 +50,13 @@ int handle_request(int fd){
     }
     cout << "[Nameserver]: received packet!" << endl;
     char_to_dns_packet(buffer, request);
-    string src_url(request.url);
+    string src_ip(request.src_addr);
     
     cout << "[Nameserver]: handling request from " << request.src_addr << " for "
-    << src_url << endl;
+    <<request.url << endl;
     
     /* Select server to return */
-    string selected_server = select_server(src_url, nodes,
+    string selected_server = select_server(src_ip, nodes,
                                            server_ips, use_round_robin);
     cout << "[Nameserver]: Selected " << selected_server << endl;
     // LOGGING
