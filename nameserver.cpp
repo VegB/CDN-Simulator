@@ -97,7 +97,8 @@ int main(int argc, char* argv[]){
     cout << "[Nameserver]: Get LSA info and build up a graph with Distance info" << endl;
     init_Distance();
     LoadLSA(nodes, lsa_filepath);
-    
+	tmp_server = server_ips.begin();
+
     /* Main Process */
     int listenfd = Open_listenfd((char*)port.c_str());
     if(listenfd == -1){
