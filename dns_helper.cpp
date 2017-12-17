@@ -258,12 +258,15 @@ void init_dns_header(DNS_Packet& packet, int is_request){
 void dns_packet_to_char(DNS_Packet& packet, char* buffer){
     memcpy((void*)buffer, (const void*)(&packet), sizeof(packet));
     // avoid early truncate.
-//    for(int i = sizeof(struct DNS_Header); i < sizeof(struct DNS_Packet); ++i){
-//        if(buffer[i] == 0){
-//            buffer[i] = 7;
-//        }
-//    }
-    cout << "dns_packet_to_char()" << endl;
+    for(int i = sizeof(struct DNS_Header); i < sizeof(struct DNS_Packet); ++i){
+        if(buffer[i] < 33 || buffer[i] > 122){
+            buffer[i] = 1;
+        }
+    }
+	buffer[sizeof(struct DNS_Packet)] = 0;
+    cout << "packet size = " << sizeof(struct DNS_Packet) << endl;
+	cout << "buffersize = " << strlen(buffer) << endl;
+	cout << "dns_packet_to_char()" << endl;
     cout << "    buffer: " << buffer << endl;
     char* p = buffer + sizeof(struct DNS_Header);
     cout << "    src_addr: " << p << endl;
@@ -275,7 +278,7 @@ void dns_packet_to_char(DNS_Packet& packet, char* buffer){
 
 void char_to_dns_packet(char* buffer, DNS_Packet& packet){
     for(int i = sizeof(struct DNS_Header); i < sizeof(struct DNS_Packet); ++i){
-        if(buffer[i] == 7){
+        if(buffer[i] == 1){
             buffer[i] = 0;
         }
     }

@@ -25,12 +25,10 @@ int init_mydns(const char *dns_ip, unsigned int dns_port, const char *client_ip)
     << ", client_ip: " << client_ip << endl;
     char port[BUFFER_SIZE];
     sprintf(port, "%d", dns_port);
-	cout << 1 << endl;
 	strcpy(my_ip, client_ip);
-	cout << 2 << endl;
     cout << "dns_ip: " << dns_ip << ", dns_port: " << dns_port << endl;
 	clientfd = Open_clientfd((char*)dns_ip, (char*)port);
-	cout << 3 << endl;
+	cout << "clientfd = " << clientfd << endl;
 	if(clientfd == -1){
         return -1;
     }
@@ -69,7 +67,6 @@ int resolve(const char *node, const char *service,
     
     char buffer[BUFFER_SIZE];
     DNS_Packet request, response;
-    int clientfd;
     rio_t rio;
     
     (*res) = (addrinfo*) malloc(sizeof(addrinfo));
@@ -89,8 +86,9 @@ int resolve(const char *node, const char *service,
     dns_packet_to_char(request, buffer);
     
     /* send request to server */
+	cout << "clientfd = " << clientfd << endl;
     Rio_readinitb(&rio, clientfd);
-    Rio_writen(clientfd, buffer, sizeof(request));
+    Rio_writen(clientfd, buffer, strlen(buffer));
     
     /* recieve the response from the server */
     cout << "[mydns]: waiting for response" << endl;
