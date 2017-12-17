@@ -12,6 +12,7 @@ string log_path, my_ip, port, server_ip_filepath, lsa_filepath;
 map<string, int> nodes;
 vector<string> server_ips;
 ofstream fout;
+clock_t starttime;
 
 int load_parameters(int argc, char* argv[]){
     if(argc == 6 || argc == 7){  // no '-r'
@@ -58,7 +59,7 @@ int handle_request(int fd){
     
     /* Select server to return */
     string selected_server = select_server(src_ip, nodes,
-                                           server_ips, tmp_server, use_round_robin);
+                                           server_ips, use_round_robin);
     cout << "[Nameserver]: Selected " << selected_server << endl;
     
     /* Create response */
@@ -71,8 +72,8 @@ int handle_request(int fd){
     
     /* LOGGING */
     clock_t t = clock();
-    fout.open(log_path.c_str());
-    fout << t << " " << request.src_addr << " " << request.url << " " << selected_server << endl;
+    fout.open(log_path.c_str(), ofstream::out | ofstream::app);
+    fout << t - starttime << " " << request.src_addr << " " << request.url << " " << selected_server << endl;
     fout.close();
     
     return 0;
@@ -88,7 +89,8 @@ void *thread(void *vargp){
 }
 
 int main(int argc, char* argv[]){
-    /* Read in parameters */
+	starttime = clock();
+/* Read in parameters */
     if(load_parameters(argc, argv) == -1){
         return 0;
     }
@@ -103,7 +105,7 @@ int main(int argc, char* argv[]){
     cout << "[Nameserver]: Get LSA info and build up a graph with Distance info" << endl;
     init_Distance();
     LoadLSA(nodes, lsa_filepath);
-	tmp_server = server_ips.begin();
+	//tmp_server = server_ips.begin();
 
     /* Main Process */
     int listenfd = Open_listenfd((char*)port.c_str());
