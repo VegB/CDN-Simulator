@@ -81,7 +81,7 @@ int resolve(const char *node, const char *service,
     ((sockaddr_in*) (*res)->ai_addr)->sin_port = ntohs(atoi(service));
     
     /* Create Clientfd*/
-    clientfd = Open_clientfd((char*)dns_ip, (char*)port);
+    clientfd = Open_clientfd((char*)dns_ip, (char*)dns_port);
     cout << "clientfd = " << clientfd << endl;
     if(clientfd == -1){
         return -1;
