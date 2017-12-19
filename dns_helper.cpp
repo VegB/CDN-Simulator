@@ -217,6 +217,7 @@ void init_dns_request(DNS_Packet& packet, const char* url){
     /* set URL */
     //packet.url_len = url.length();
     strcpy(packet.url, url);
+    cout << "Request URL: " << packet.url << endl;
 }
 
 void init_dns_response(DNS_Packet& packet, const char* ip){
@@ -225,6 +226,7 @@ void init_dns_response(DNS_Packet& packet, const char* ip){
     /* Set IP */
     //packet.ip_len = ip.length();
     strcpy(packet.ip, ip);
+    cout << "Response IP: " << packet.ip << endl;
 }
 
 /* Initialize a packet used for communication between DNS server and client side */
