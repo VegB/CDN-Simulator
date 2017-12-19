@@ -1,6 +1,6 @@
 //
 //  Nameserver.cpp
-//  
+//
 //
 //  Created by 朱芄蓉 on 16/12/2017.
 //
@@ -9,6 +9,8 @@
 
 int use_round_robin = NO;
 string log_path, req_ip, port, server_ip_filepath, lsa_filepath;
+map<string, int> nodes;
+vector<string> server_ips;
 
 int load_parameters(int argc, char* argv[]){
     if(argc == 6 || argc == 7){  // no '-r'
@@ -35,7 +37,7 @@ int load_parameters(int argc, char* argv[]){
     return 0;
 }
 
-int handle_request(map<string, int> nodes, vector<string> server_ips, int fd){
+int handle_request(int fd){
     rio_t rio;
     char buffer[BUFFER_SIZE];
     DNS_Packet request, response;
@@ -54,19 +56,19 @@ int handle_request(map<string, int> nodes, vector<string> server_ips, int fd){
                                            server_ips, use_round_robin);
     
     /* Create response */
-    DNS_Packet response;
-    init_dns_request(response, select_server.c_str());
+    init_dns_request(response, selected_server.c_str());
     dns_packet_to_char(response, buffer);
     
     /* Send response */
     Rio_writen(fd, buffer, sizeof(response));
+    return 0;
 }
 
 void *thread(void *vargp){
     int connfd = *((int *)vargp);
     pthread_detach(pthread_self());
     free(vargp);
-    handle_request(nodes, server_ips, connfd);
+    handle_request(connfd);
     close(connfd);
     return NULL;
 }
@@ -78,15 +80,15 @@ int main(int argc, char* argv[]){
     }
     
     /* Load server replicas' IP */
-    vector<string> server_ips = LoadServersIP(server_ip_filepath);
-    tmp_server = server_ips.begin();  // used in round-robin
+    LoadServersIP(server_ips, server_ip_filepath);
+    // string tmp_server = server_ips.begin();  // used in round-robin
     
     /* Get LSA info and build up a graph with Distance info */
     init_Distance();
-    map<string, int> nodes = LoadLSA(lsa_filepath);
+    LoadLSA(nodes, lsa_filepath);
     
     /* Main Process */
-    int listenfd = Open_listenfd(port.c_str());
+    int listenfd = Open_listenfd((char*)port.c_str());
     if(listenfd == -1){
         cerr << "[Nameserver]: Open_listenfd() failed!" << endl;
         return -1;
@@ -94,9 +96,10 @@ int main(int argc, char* argv[]){
     pthread_t tid;
     struct sockaddr_in clientaddr;
     while (1) {
-        int* connfd = malloc(sizeof(int));
-        *connfd = Accept(listenfd, (SA *)&clientaddr, &sizeof(clientaddr));
-        printf("Accepted connection from (%s, %s)\n", hostname, port);
+        socklen_t clientaddr_len = sizeof(clientaddr);
+        int* connfd = (int*)malloc(sizeof(int));
+        *connfd = Accept(listenfd, (SA *)&clientaddr, &clientaddr_len);
+        printf("Accepted connection from (%s, %s)\n", req_ip.c_str(), port.c_str());
         pthread_create(&tid, NULL, thread, connfd);
     }
     return 0;
