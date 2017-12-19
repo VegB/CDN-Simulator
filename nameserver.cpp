@@ -78,7 +78,7 @@ int main(int argc, char* argv[]){
     if(load_parameters(argc, argv) == -1){
         return 0;
     }
-    
+    cout << port << endl;
     /* Load server replicas' IP */
     LoadServersIP(server_ips, server_ip_filepath);
     // string tmp_server = server_ips.begin();  // used in round-robin
