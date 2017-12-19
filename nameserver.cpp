@@ -86,7 +86,7 @@ int main(int argc, char* argv[]){
     map<string, int> nodes = LoadLSA(lsa_filepath);
     
     /* Main Process */
-    listenfd = Open_listenfd(port.c_str());
+    int listenfd = Open_listenfd(port.c_str());
     if(listenfd == -1){
         cerr << "[Nameserver]: Open_listenfd() failed!" << endl;
         return -1;
