@@ -31,7 +31,7 @@ vector<string>::iterator tmp_server;
 void LoadServersIP(vector<string>& server_ips, string filepath){
     string ip;
     ifstream fin;
-    fin.open(filepath);
+    fin.open(filepath.c_str());
     
     while(fin >> ip){
         server_ips.push_back(ip);
@@ -87,7 +87,7 @@ void LoadLSA(map<string, int> &store, string filepath){
     string node, tmp_neighbors;
     int time_stamp;
     ifstream fin;
-    fin.open(filepath);
+    fin.open(filepath.c_str());
     
     /* read in each LSA message */
     while(fin >> node >> time_stamp >> tmp_neighbors){
