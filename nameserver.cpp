@@ -61,6 +61,7 @@ int handle_request(int fd){
     
     /* Send response */
     Rio_writen(fd, buffer, sizeof(response));
+    return 0;
 }
 
 void *thread(void *vargp){
