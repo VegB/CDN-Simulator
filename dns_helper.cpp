@@ -28,8 +28,7 @@ vector<string>::iterator tmp_server;
  * Returns:
  a vector<string> that stores all IP.
  */
-vector<string> LoadServersIP(string filepath){
-    vector<string> server_ips;
+void LoadServersIP(vector<string>& server_ips, string filepath){
     string ip;
     ifstream fin;
     fin.open(filepath);
@@ -38,8 +37,6 @@ vector<string> LoadServersIP(string filepath){
         server_ips.push_back(ip);
     }
     fin.close();
-    
-    return server_ips;
 }
 
 /*
@@ -54,8 +51,8 @@ vector<string> LoadServersIP(string filepath){
  a vector<string> that contains all adjacent ips.
  */
 vector<string> split(const string& s, const char& c){
-    string buff = "";
     vector<string> v;
+    string buff = "";
     
     for(int i = 0; i < s.length(); ++i){
         if(s[i] != c){
@@ -82,9 +79,8 @@ vector<string> split(const string& s, const char& c){
  * Returns:
  nodes that appears in map<string, int>.
  */
-map<string, int> LoadLSA(string filepath){
+void LoadLSA(map<string, int> &store, string filepath){
     // keep record of all nodes that appears, <key: node, value: id in graph>
-    map<string, int> store;
     // keep record of time sequence of lsa, <key: node, value: its most recent time_stamp>
     map<string, int> lsa_time_stamp;
     pair<map<string, int>::iterator, bool> rtn;
@@ -154,7 +150,6 @@ map<string, int> LoadLSA(string filepath){
             }
         }
     }
-    return store;
 }
 
 void init_Distance(){
@@ -257,9 +252,9 @@ void init_dns_header(DNS_Packet& packet, int is_request){
 }
 
 void dns_packet_to_char(DNS_Packet& packet, char* buffer){
-    memcpy((void*)buffer, (const void*)(&packet));
+    memcpy((void*)buffer, (const void*)(&packet), sizeof(packet));
 }
 
 void char_to_dns_packet(char* buffer, DNS_Packet& packet){
-    memcpy((void*)buffer, (const void*)(&packet));
+    memcpy((void*)buffer, (const void*)(&packet), sizeof(packet));
 }

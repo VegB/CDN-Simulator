@@ -27,9 +27,9 @@
 
 using namespace std;
 
-vector<string> LoadServersIP(string filepath);
+void LoadServersIP(vector<string>& server_ips, string filepath);
 vector<string> split(const string& s, const char& c);
-map<string, int> LoadLSA(string filepath);
+void LoadLSA(map<string, int> &nodes, string filepath);
 void init_Distance();
 void print_Distance(map<string, int> nodes);
 string select_server(string src_ip, map<string, int> nodes,
