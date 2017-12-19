@@ -1,23 +1,31 @@
 #define YES 1
 #define NO 0
 
+#define REQUEST 1
+#define RESPONSE 0
+
+#define BUFFER_SIZE 200
 /* Header for DNS messages */
 struct DNS_Header{
-    uint16_t ID;
-    
-    uint8_t RD:1;
-    uint8_t TC:1;
-    uint8_t AA:1;
-    uint8_t OPCODE:4;
-    uint8_t QR:1;
-    
-    uint8_t RCODE:4;
-    uint8_t Z:3;
-    uint8_t RA:1;
-    
-    uint16_t QDCOUNT;
-    uint16_t ANCOUNT;
-    uint16_t NSCOUNT;
-    uint16_t ARCOUNT;
+    uint8_t AA;
+    uint8_t RD;
+    uint8_t RA;
+    uint8_t Z;
+    uint8_t NSCOUNT;
+    uint8_t ARCOUNT;
+    uint8_t QTYPE;
+    uint8_t QCLASS;
+    uint8_t TYPE;
+    uint8_t CLASS;
+    uint8_t TTL;
 };
 
+struct DNS_Packet{
+    DNS_Header header;
+    /* for response */
+    int ip_len;
+    char ip[20];
+    /* for request */
+    int url_len;
+    char url[50];
+};
