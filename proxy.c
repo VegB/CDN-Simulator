@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "csapp.h"
 #include <sys/time.h>
+#include "mydns.h"
 /* Recommended max cache and object sizes */
 #define MAX_CACHE_SIZE 1049000
 #define MAX_OBJECT_SIZE 102400
@@ -21,7 +22,7 @@ int powerten(int i);
 void *thread(void *vargp);
 static void request_hdr(char *buf, char *buf2ser, char *hostname);
 void parse_bitrates(char *xml);
-void choose_bitrate(char *uri, char *uri_choose_bitrate);
+int choose_bitrate(char *uri, char *uri_choose_bitrate);
 float char2float(char* c);
 
 // global variables
@@ -35,11 +36,14 @@ char *video_pku = "video.pku.edu.cn";
 char xml[MAXLINE];
 int bitrate_array[50] = {0};
 int bitrate_cnt = 0;
-
 struct timeval start;
 struct timeval end;
 float throughput_current = 0;
 float throughput_new = 0;
+FILE *fp;
+char *log_filename;
+char *dns_ip, *dns_port;
+int dns = 0;
 int main(int argc, char **argv) 
 {
     signal(SIGPIPE, SIG_IGN); // ignore sigpipe
@@ -53,21 +57,31 @@ int main(int argc, char **argv)
     pthread_t tid;
 
     /* Check command line args */
-    if (argc != 5) {
-	    fprintf(stderr, "usage: %s <alpha> <listen-port> <fake-ip> <www-ip>\n", argv[0]);
+    if (argc < 7) {
+	    fprintf(stderr, "usage: %s <log> <alpha> <listen-port> <fake-ip> <dns-ip> <dns-port> [<www-ip>]\n", argv[0]);
 	    exit(1);
     }
-    alpha = char2float(argv[1]);
-    listen_port = argv[2];
-    fake_ip = argv[3];
-    www_ip = argv[4];
+    log_filename = argv[1];
+    alpha = char2float(argv[2]);
+    listen_port = argv[3];
+    fake_ip = argv[4];
+    dns_ip = argv[5];
+    dns_port = argv[6];
+    if(argc == 8){
+        www_ip = argv[7];
+        dns = 0;
+    }
+    else{
+        dns = 1;
+        init_mydns(dns_ip, atoi(dns_port), fake_ip);
+    }
     printf("fake_ip = %s\n", fake_ip);
     printf("www_ip = %s\n", www_ip);
     sem_init(&mutex, 0, 1);
     listenfd = Open_listenfd(listen_port);
     while (1) {
 	    clientlen = sizeof(clientaddr);
-        connfd = (int*)malloc(sizeof(int));
+        connfd = malloc(sizeof(int));
 	    *connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
         Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
         printf("Accepted connection from (%s, %s)\n", hostname, port);
@@ -83,6 +97,7 @@ float char2float(char* c){
         return 0.5;
     if(strcmp(c, "0.9") == 0)
         return 0.9;
+    return 0;
 }
 /*
  * doit - handle one HTTP request/response transaction
@@ -102,7 +117,7 @@ void doit(int fd)
     char ser_response[MAXLINE];     // server to proxy
     rio_t rio, rio_ser;             // rio: between client and proxy
                                     // rio_ser: between proxy and server
-    port = (int*)malloc(sizeof(int));
+    port = malloc(sizeof(int));
     *port = 80;                      // default port 80
 
     memset(buf2ser, 0, sizeof(buf2ser)); 
@@ -150,8 +165,8 @@ void doit(int fd)
         strcpy(hostname,www_ip);
     }
     else{
-        fprintf(stderr, "wrong hostname\n");
-        return;
+        fprintf(stderr, "reverse proxy mode\n");
+        strcpy(hostname,www_ip);
     }
     // find .f4m in uri
     if (uri_found_f4m(uri, uri_nolist) != 0){
@@ -180,8 +195,8 @@ void doit(int fd)
             strcpy(hostname,www_ip);
         }
         else{
-            fprintf(stderr, "wrong hostname\n");
-            return;
+            fprintf(stderr, "reverse proxy mode\n");
+            strcpy(hostname,www_ip);
         }
         if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
             fprintf(stderr, "open server fd error\n");
@@ -199,17 +214,19 @@ void doit(int fd)
     }
     // other requests
     char uri_choose_bitrate[MAXLINE];
-    choose_bitrate(uri, uri_choose_bitrate);
+    int rate = choose_bitrate(uri, uri_choose_bitrate);
     
     strcpy(hostname,video_pku);
     sprintf(buf2ser, "%s %s %s\r\n", method, uri_choose_bitrate, version);
     request_hdr(buf, buf2ser, hostname);
-    if(strcmp(hostname, video_pku) == 0){
-        strcpy(hostname,www_ip);
-    }
-    else{
-        fprintf(stderr, "wrong hostname\n");
-        return;
+    if(dns == 0){
+        if(strcmp(hostname, video_pku) == 0){
+            strcpy(hostname,www_ip);
+        }
+        else{
+            fprintf(stderr, "reverse proxy mode\n");
+            strcpy(hostname,www_ip);
+        }
     }
     if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
         fprintf(stderr, "open server fd error\n");
@@ -240,8 +257,33 @@ void doit(int fd)
         throughput_current = alpha * throughput_new + (1 - alpha) * throughput_current;
     printf("throughput_current = %.1f Kbps\n",throughput_current);
     close(serverfd);
+    
+    // output log
+    int time_epoch = end.tv_sec+end.tv_usec/1000000;
+    float time_duration = time_use/1000000;
+    // tput = throughput_new;
+    // avg-tput = throughput_current;
+    // bitrate = rate
+    // server-ip = www_ip
+    // chunkname = uri_choose_bitrate
+    
+    if((fp = fopen(log_filename,"a+")) == NULL){
+        printf("file cannot be opened/n");
+        return;
+    }
+    // <time> <duration> <tput> <avg-tput> <bitrate> <server-ip> <chunkname>
+    fprintf(fp, "%d %f %f %f %d %s %s\n", time_epoch, time_duration, throughput_new,
+            throughput_current, rate, www_ip, uri_choose_bitrate);
+    printf("%d %f %f %f %d %s %s\n", time_epoch, time_duration, throughput_new,
+            throughput_current, rate, www_ip, uri_choose_bitrate);
+    fclose(fp);
+    
+    
+    
+    
+    
 }
-void choose_bitrate(char *uri, char *uri_choose_bitrate){
+int choose_bitrate(char *uri, char *uri_choose_bitrate){
     int i;
     int choosen_bitrate = 0;
     char bitrate_char[10];
@@ -259,7 +301,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     int len = 0;
 
     int flag = 0;
-    char uri_part_1[50], uri_part_2[50], uri_bitrate[50];
+    char uri_part_1[50], uri_part_2[50];
     for(p = uri; *p; p++){
         if(strncmp(p, "Seg", strlen("Seg")) == 0){
             flag = 1;
@@ -268,7 +310,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     }
     if(flag == 0) {
         strcpy(uri_choose_bitrate, uri);
-        return;
+        return choosen_bitrate;
     }
     strcpy(uri_part_2, p);
     p--;
@@ -286,7 +328,7 @@ void choose_bitrate(char *uri, char *uri_choose_bitrate){
     strcat(uri_part_1, uri_part_2);
     printf("final_uri=%s\n",uri_part_1);
     strcpy(uri_choose_bitrate, uri_part_1);
-    return;
+    return choosen_bitrate;
 }
 /* $end doit */
 void parse_bitrates(char *xml){
@@ -335,7 +377,12 @@ int open_clientfd_bind_fake_ip(char *hostname, char *port, char *fake_ip) {
     hints.ai_socktype = SOCK_STREAM;  /* Open a connection */
     hints.ai_flags = AI_NUMERICSERV;  /* ... using a numeric port arg. */
     hints.ai_flags |= AI_ADDRCONFIG;  /* Recommended for connections */
-    Getaddrinfo(hostname, port, &hints, &listp);
+    if(dns == 1){
+        resolve(hostname, port, &hints, &listp);
+    }
+    else{
+        Getaddrinfo(hostname, port, &hints, &listp);
+    }
     
     /* Walk the list for one that we can successfully connect to */
     for (p = listp; p; p = p->ai_next) {
@@ -361,7 +408,12 @@ int open_clientfd_bind_fake_ip(char *hostname, char *port, char *fake_ip) {
     }
     
     /* Clean up */
-    Freeaddrinfo(listp);
+    if(dns == 1){
+        mydns_freeaddrinfo(listp);
+    }
+    else{
+        Freeaddrinfo(listp);
+    }
     if (!p) /* All connects failed */
         return -1;
     else    /* The last connect succeeded */
