@@ -24,9 +24,7 @@ struct DNS_Packet{
     DNS_Header header;
     char src_addr[20];
     /* for response */
-    int ip_len;
     char ip[20];
     /* for request */
-    int url_len;
     char url[50];
 };
