@@ -1,6 +1,6 @@
 //
 //  Nameserver.cpp
-//  
+//
 //
 //  Created by 朱芄蓉 on 16/12/2017.
 //
@@ -8,7 +8,9 @@
 #include "dns_helper.hpp"
 
 int use_round_robin = NO;
-string log_path, req_ip, port, server_ip_filepath, lsa_filepath;
+string log_path, my_ip, port, server_ip_filepath, lsa_filepath;
+map<string, int> nodes;
+vector<string> server_ips;
 
 int load_parameters(int argc, char* argv[]){
     if(argc == 6 || argc == 7){  // no '-r'
@@ -22,7 +24,7 @@ int load_parameters(int argc, char* argv[]){
             }
         }
         log_path = argv[argc - 5];
-        req_ip = argv[argc - 4];
+        my_ip = argv[argc - 4];
         port = argv[argc - 3];
         server_ip_filepath = argv[argc - 2];
         lsa_filepath = argv[argc - 1];
@@ -35,7 +37,7 @@ int load_parameters(int argc, char* argv[]){
     return 0;
 }
 
-int handle_request(map<string, int> nodes, vector<string> server_ips, int fd){
+int handle_request(int fd){
     rio_t rio;
     char buffer[BUFFER_SIZE];
     DNS_Packet request, response;
@@ -47,26 +49,33 @@ int handle_request(map<string, int> nodes, vector<string> server_ips, int fd){
         return -1;
     }
     char_to_dns_packet(buffer, request);
-    string src_ip(request.ip);
+    string src_url(request.url);
+    
+    cout << "[Nameserver]: handling request from " << request.src_addr << " for "
+    << src_url << endl;
     
     /* Select server to return */
-    string selected_server = select_server(src_ip, nodes,
+    string selected_server = select_server(src_url, nodes,
                                            server_ips, use_round_robin);
+    cout << "[Nameserver]: Selected " << selected_server << endl;
+    // LOGGING
+    // cout << "time " << request.src_addr << " " << src_url << " " << selected_server << endl;
     
     /* Create response */
-    DNS_Packet response;
-    init_dns_request(response, select_server.c_str());
+    init_dns_response(response, my_ip.c_str(), selected_server.c_str());
     dns_packet_to_char(response, buffer);
     
     /* Send response */
     Rio_writen(fd, buffer, sizeof(response));
+    cout << "[Nameserver]: response sent" << endl;
+    return 0;
 }
 
 void *thread(void *vargp){
     int connfd = *((int *)vargp);
     pthread_detach(pthread_self());
     free(vargp);
-    handle_request(nodes, server_ips, connfd);
+    handle_request(connfd);
     close(connfd);
     return NULL;
 }
@@ -76,17 +85,20 @@ int main(int argc, char* argv[]){
     if(load_parameters(argc, argv) == -1){
         return 0;
     }
+    cout << "[Nameserver]: IP = " << my_ip << ", port = " << port << endl;
     
     /* Load server replicas' IP */
-    vector<string> server_ips = LoadServersIP(server_ip_filepath);
-    tmp_server = server_ips.begin();  // used in round-robin
+    cout << "[Nameserver]: Loading server replicas' IP" << endl;
+    LoadServersIP(server_ips, server_ip_filepath);
+    // string tmp_server = server_ips.begin();  // used in round-robin
     
     /* Get LSA info and build up a graph with Distance info */
+    cout << "[Nameserver]: Get LSA info and build up a graph with Distance info" << endl;
     init_Distance();
-    map<string, int> nodes = LoadLSA(lsa_filepath);
+    LoadLSA(nodes, lsa_filepath);
     
     /* Main Process */
-    listenfd = Open_listenfd(port.c_str());
+    int listenfd = Open_listenfd((char*)port.c_str());
     if(listenfd == -1){
         cerr << "[Nameserver]: Open_listenfd() failed!" << endl;
         return -1;
@@ -94,9 +106,10 @@ int main(int argc, char* argv[]){
     pthread_t tid;
     struct sockaddr_in clientaddr;
     while (1) {
-        int* connfd = malloc(sizeof(int));
-        *connfd = Accept(listenfd, (SA *)&clientaddr, &sizeof(clientaddr));
-        printf("Accepted connection from (%s, %s)\n", hostname, port);
+        cout << "[Nameserver]: Waiting for connection." << endl;
+        socklen_t clientaddr_len = sizeof(clientaddr);
+        int* connfd = (int*)malloc(sizeof(int));
+        *connfd = Accept(listenfd, (SA *)&clientaddr, &clientaddr_len);
         pthread_create(&tid, NULL, thread, connfd);
     }
     return 0;
