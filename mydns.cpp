@@ -87,12 +87,6 @@ int resolve(const char *node, const char *service,
     cout << "[mydns]: sending request" << endl;
     init_dns_request(request, my_ip, node);  // here
     dns_packet_to_char(request, buffer);
-
-//    /* Connect to DNS server */
-//    if((clientfd = open_clientfd((char*)node, (char*)service)) < 0){
-//        cerr << "[mydns]: open clientfd failed!" << endl;
-//        return -1;
-//    }
     
     /* send request to server */
     Rio_readinitb(&rio, clientfd);

@@ -233,23 +233,23 @@ void init_dns_response(DNS_Packet& packet, const char* src_addr, const char* ip)
 void init_dns_header(DNS_Packet& packet, int is_request){
     DNS_Header* header = &(packet.header);
     memset(header, 0, sizeof(struct DNS_Header));
-    header->AA = 0;
-    header->RD = 0;
-    header->RA = 0;
-    header->Z = 0;
-    header->NSCOUNT = 0;
-    header->ARCOUNT = 0;
-    header->TTL = 0;
+    header->AA = '0';
+    header->RD = '0';
+    header->RA = '0';
+    header->Z = '0';
+    header->NSCOUNT = '0';
+    header->ARCOUNT = '0';
+    header->TTL = '0';
     
     if(is_request == YES){
-        header->AA = 0;
-        header->QTYPE = 1;
-        header->QCLASS = 1;
+        header->AA = '0';
+        header->QTYPE = '1';
+        header->QCLASS = '1';
     }
     else{
-        header->AA = 1;
-        header->TYPE = 1;
-        header->CLASS = 1;
+        header->AA = '1';
+        header->TYPE = '1';
+        header->CLASS = '1';
     }
 }
 
