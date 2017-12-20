@@ -8,7 +8,7 @@
 #include "mydns.h"
 
 int clientfd;
-char my_ip[20];
+char my_ip[BUFFER_SIZE];
 
 /**
  * Initialize your client DNS library with the IP address and port number of
@@ -23,7 +23,7 @@ char my_ip[20];
 int init_mydns(const char *dns_ip, unsigned int dns_port, const char *client_ip){
     cout << "[mydns]: init_mydns(), dns_ip: " << dns_ip << ", dns port: " << dns_port
     << ", client_ip: " << client_ip << endl;
-    char port[10];
+    char port[BUFFER_SIZE];
     sprintf(port, "%d", dns_port);
     strcpy(my_ip, client_ip);
     clientfd = open_clientfd((char*)dns_ip, (char*)dns_port);
