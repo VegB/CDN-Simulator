@@ -245,9 +245,13 @@ void init_dns_header(DNS_Packet& packet, int is_request){
         header->AA = '0';
         header->QTYPE = '1';
         header->QCLASS = '1';
+        header->TYPE = '0';
+        header->CLASS = '0';
     }
     else{
         header->AA = '1';
+        header->QTYPE = '0';
+        header->QCLASS = '0';
         header->TYPE = '1';
         header->CLASS = '1';
     }
