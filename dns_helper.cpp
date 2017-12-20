@@ -15,6 +15,7 @@
 int Distance[MAX][MAX];
 int pre[MAX][MAX];
 int node_num = 0;
+vector<string>::iterator tmp_server;  // round-robin
 
 /*
  Load all content servers' IP.
@@ -34,6 +35,7 @@ void LoadServersIP(vector<string>& server_ips, string filepath){
         server_ips.push_back(ip);
     }
     fin.close();
+    tmp_server = server_ips.begin();
 }
 
 /*
@@ -185,8 +187,7 @@ void print_Distance(map<string, int> nodes){
  the ip of the selected server
  */
 string select_server(string src_ip, map<string, int> nodes,
-                     vector<string> server_ips, vector<string>::iterator tmp_server,
-                     int use_round_robin){
+                     vector<string> server_ips, int use_round_robin){
     cout << "[Nameserver]: select_server()" << endl;
     cout << "[Nameserver]: Client IP: " << src_ip << endl;
     string rst;
@@ -195,9 +196,12 @@ string select_server(string src_ip, map<string, int> nodes,
         cout << "[Nameserver]: ROUND-ROBIN" << endl;
         rst = *tmp_server;
         tmp_server++;
+        //        cout << "rst: " << rst << endl;
+        //        cout << "*tmp_server: " << *tmp_server << endl;
         if(tmp_server == server_ips.end()){
             tmp_server = server_ips.begin();
         }
+        return rst;
     }
     /* Distance based selection */
     else{

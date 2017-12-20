@@ -11,8 +11,7 @@ int use_round_robin = NO;
 string log_path, my_ip, port, server_ip_filepath, lsa_filepath;
 map<string, int> nodes;
 vector<string> server_ips;
-// round-robin
-vector<string>::iterator tmp_server;
+ofstream fout;
 
 int load_parameters(int argc, char* argv[]){
     if(argc == 6 || argc == 7){  // no '-r'
@@ -61,8 +60,6 @@ int handle_request(int fd){
     string selected_server = select_server(src_ip, nodes,
                                            server_ips, tmp_server, use_round_robin);
     cout << "[Nameserver]: Selected " << selected_server << endl;
-    // LOGGING
-    // cout << "time " << request.src_addr << " " << src_url << " " << selected_server << endl;
     
     /* Create response */
     init_dns_response(response, my_ip.c_str(), selected_server.c_str());
@@ -71,6 +68,13 @@ int handle_request(int fd){
     /* Send response */
     Rio_writen(fd, buffer, sizeof(response));
     cout << "[Nameserver]: response sent" << endl;
+    
+    /* LOGGING */
+    clock_t t = clock();
+    fout.open(log_path.c_str());
+    fout << t << " " << request.src_addr << " " << request.url << " " << selected_server << endl;
+    fout.close();
+    
     return 0;
 }
 
