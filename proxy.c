@@ -234,6 +234,7 @@ void doit(int fd)
         }
     }
     if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
+        cout << "[Proxy]: before binding, hostname: " << hostname << ", port2: " << port2 << endl;
         fprintf(stderr, "open server fd error\n");
         return;
     }

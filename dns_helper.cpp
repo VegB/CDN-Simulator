@@ -255,6 +255,7 @@ void init_dns_header(DNS_Packet& packet, int is_request){
 
 void dns_packet_to_char(DNS_Packet& packet, char* buffer){
     memcpy((void*)buffer, (const void*)(&packet), sizeof(packet));
+    cout << "dns_packet_to_char()" << endl;
     char* p = buffer + sizeof(struct DNS_Header);
     cout << "src_addr: " << p << endl;
     p += 20;
