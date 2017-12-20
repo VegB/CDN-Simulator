@@ -161,12 +161,14 @@ void doit(int fd)
 
     // request header
     request_hdr(buf, buf2ser, hostname);
-    if(strcmp(hostname, video_pku) == 0){
-        strcpy(hostname,www_ip);
-    }
-    else{
-        fprintf(stderr, "reverse proxy mode\n");
-        strcpy(hostname,www_ip);
+    if(dns == 0){
+        if(strcmp(hostname, video_pku) == 0){
+            strcpy(hostname,www_ip);
+        }
+        else{
+            fprintf(stderr, "reverse proxy mode\n");
+            strcpy(hostname,www_ip);
+        }
     }
     // find .f4m in uri
     if (uri_found_f4m(uri, uri_nolist) != 0){
@@ -192,12 +194,14 @@ void doit(int fd)
         strcpy(hostname,video_pku);
         sprintf(buf2ser, "%s %s %s\r\n", method, uri_nolist, version);
         request_hdr(buf, buf2ser, hostname);
-        if(strcmp(hostname, video_pku) == 0){
-            strcpy(hostname,www_ip);
-        }
-        else{
-            fprintf(stderr, "reverse proxy mode\n");
-            strcpy(hostname,www_ip);
+        if(dns == 0){
+            if(strcmp(hostname, video_pku) == 0){
+                strcpy(hostname,www_ip);
+            }
+            else{
+                fprintf(stderr, "reverse proxy mode\n");
+                strcpy(hostname,www_ip);
+            }
         }
         if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
             fprintf(stderr, "open server fd error\n");
