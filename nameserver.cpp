@@ -44,10 +44,11 @@ int handle_request(int fd){
     
     /* Read packet */
     Rio_readinitb(&rio, fd);
-    if (!Rio_readlineb(&rio, buffer, BUFFER_SIZE)){
+    if (!Rio_readlineb(&rio, buffer, sizeof(struct DNS_Packet))){
         cerr << "[Nameserver]: Rio_readlineb() failed!" << endl;
         return -1;
     }
+    cout << "[Nameserver]: received packet!" << endl;
     char_to_dns_packet(buffer, request);
     string src_url(request.url);
     

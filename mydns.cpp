@@ -93,7 +93,7 @@ int resolve(const char *node, const char *service,
     /* recieve the response from the server */
     cout << "[mydns]: waiting for response" << endl;
     memset(buffer, 0, sizeof(response));
-    while(rio_readnb(&rio, buffer, BUFFER_SIZE) > 0) {
+    while(rio_readnb(&rio, buffer, sizeof(struct DNS_Packet)) > 0) {
         char_to_dns_packet(buffer, response);
     }
     close(clientfd);

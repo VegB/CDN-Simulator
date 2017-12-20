@@ -188,9 +188,12 @@ void print_Distance(map<string, int> nodes){
  */
 string select_server(string src_ip, map<string, int> nodes,
                      vector<string> server_ips, int use_round_robin){
+    cout << "[Nameserver]: select_server()" << endl;
+    cout << "[Nameserver]: Client IP: " << src_ip << endl;
     string rst;
     /* Round_robin */
     if(use_round_robin == YES){
+        cout << "[Nameserver]: ROUND-ROBIN" << endl;
         rst = *tmp_server;
         tmp_server++;
         if(tmp_server == server_ips.end()){
@@ -199,6 +202,7 @@ string select_server(string src_ip, map<string, int> nodes,
     }
     /* Distance based selection */
     else{
+        cout << "[Nameserver]: NEAREST" << endl;
         int min_dist = INF;
         for(vector<string>::iterator i = server_ips.begin(); i != server_ips.end(); ++i){
             if(Distance[nodes[src_ip]][nodes[*i]] < min_dist){
@@ -264,9 +268,10 @@ void dns_packet_to_char(DNS_Packet& packet, char* buffer){
         }
     }
 	buffer[sizeof(struct DNS_Packet)] = 0;
+    
+    cout << "dns_packet_to_char()" << endl;
     cout << "packet size = " << sizeof(struct DNS_Packet) << endl;
 	cout << "buffersize = " << strlen(buffer) << endl;
-	cout << "dns_packet_to_char()" << endl;
     cout << "    buffer: " << buffer << endl;
     char* p = buffer + sizeof(struct DNS_Header);
     cout << "    src_addr: " << p << endl;
@@ -277,10 +282,23 @@ void dns_packet_to_char(DNS_Packet& packet, char* buffer){
 }
 
 void char_to_dns_packet(char* buffer, DNS_Packet& packet){
+    cout << "dns_packet_to_char()" << endl;
+    cout << "buffersize = " << strlen(buffer) << endl;
+    cout << "    buffer: " << buffer << endl;
+    char* p = buffer + sizeof(struct DNS_Header);
+    cout << "    src_addr: " << p << endl;
+    p += 20;
+    cout << "    ip: " << p << endl;
+    p += 20;
+    cout << "    url: " << p << endl;
+    
     for(int i = sizeof(struct DNS_Header); i < sizeof(struct DNS_Packet); ++i){
         if(buffer[i] == 1){
             buffer[i] = 0;
         }
     }
     memcpy((void*)buffer, (const void*)(&packet), sizeof(packet));// avoid early truncate.
+    cout << "src_addr" << packet.src_addr << endl;
+    cout << "ip: " << packet.ip << endl;
+    cout << "url: " << packet.url << endl;
 }
