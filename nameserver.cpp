@@ -11,6 +11,8 @@ int use_round_robin = NO;
 string log_path, my_ip, port, server_ip_filepath, lsa_filepath;
 map<string, int> nodes;
 vector<string> server_ips;
+// round-robin
+vector<string>::iterator tmp_server;
 
 int load_parameters(int argc, char* argv[]){
     if(argc == 6 || argc == 7){  // no '-r'
@@ -57,7 +59,7 @@ int handle_request(int fd){
     
     /* Select server to return */
     string selected_server = select_server(src_ip, nodes,
-                                           server_ips, use_round_robin);
+                                           server_ips, tmp_server, use_round_robin);
     cout << "[Nameserver]: Selected " << selected_server << endl;
     // LOGGING
     // cout << "time " << request.src_addr << " " << src_url << " " << selected_server << endl;
