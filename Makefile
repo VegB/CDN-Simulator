@@ -14,13 +14,16 @@ all: nameserver proxy
 csapp.o: csapp.c csapp.h
 	$(CC) $(CFLAGS) -c csapp.c
 
-proxy.o: proxy.c csapp.h
-	$(CC) $(CFLAGS) -c proxy.c
+mydns.o: mydns.cpp mydns.h dns_helper.hpp
+	$(CC) $(CFLAGS) -c mydns.cpp
 
-proxy: proxy.o csapp.o
+proxy.o: proxy.c csapp.h mydns.h
+	$(CC) $(CFLAGS) -c proxy.c
 
 dns_helper.o: dns_helper.cpp dns_helper.hpp
 	$(CC) $(CFLAGS) -c dns_helper.cpp
+
+proxy: proxy.o csapp.o mydns.o dns_helper.o
 
 nameserver.o: nameserver.cpp dns_helper.hpp
 	$(CC) $(CFLAGS) -c nameserver.cpp

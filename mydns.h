@@ -1,5 +1,6 @@
 #include <netdb.h>
-
+#include <stdio.h>
+#include "dns_helper.hpp"
 /**
  * Initialize your client DNS library with the IP address and port number of
  * your DNS server.

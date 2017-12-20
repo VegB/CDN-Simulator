@@ -22,7 +22,7 @@ int clientfd;
 int init_mydns(const char *dns_ip, unsigned int dns_port, const char *client_ip){
     char port[10];
     sprintf(port, "%d", dns_port);
-    clientfd = open_clientfd(dns_ip, dns_port);
+    clientfd = open_clientfd((char*)dns_ip, (char*)dns_port);
     if(clientfd == -1){
         return -1;
     }
@@ -77,7 +77,7 @@ int resolve(const char *node, const char *service,
     dns_packet_to_char(request, buffer);
 
     /* Connect to DNS server */
-    if((clientfd = open_clientfd(node, service)) < 0){
+    if((clientfd = open_clientfd((char*)node, (char*)service)) < 0){
         cerr << "[mydns]: open clientfd failed!" << endl;
         return -1;
     }

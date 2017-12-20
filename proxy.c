@@ -26,7 +26,7 @@ int choose_bitrate(char *uri, char *uri_choose_bitrate);
 float char2float(char* c);
 
 // global variables
-sem_t mutex;
+sem_t mutex_;
 float alpha;
 char *listen_port;
 char *fake_ip;
@@ -37,7 +37,7 @@ char xml[MAXLINE];
 int bitrate_array[50] = {0};
 int bitrate_cnt = 0;
 struct timeval start;
-struct timeval end;
+struct timeval end_t;
 float throughput_current = 0;
 float throughput_new = 0;
 FILE *fp;
@@ -77,11 +77,11 @@ int main(int argc, char **argv)
     }
     printf("fake_ip = %s\n", fake_ip);
     printf("www_ip = %s\n", www_ip);
-    sem_init(&mutex, 0, 1);
+    sem_init(&mutex_, 0, 1);
     listenfd = Open_listenfd(listen_port);
     while (1) {
 	    clientlen = sizeof(clientaddr);
-        connfd = malloc(sizeof(int));
+        connfd = (int*)malloc(sizeof(int));
 	    *connfd = Accept(listenfd, (SA *)&clientaddr, &clientlen);
         Getnameinfo((SA *)&clientaddr, clientlen, hostname, MAXLINE, port, MAXLINE, 0);
         printf("Accepted connection from (%s, %s)\n", hostname, port);
@@ -117,7 +117,7 @@ void doit(int fd)
     char ser_response[MAXLINE];     // server to proxy
     rio_t rio, rio_ser;             // rio: between client and proxy
                                     // rio_ser: between proxy and server
-    port = malloc(sizeof(int));
+    port = (int*)malloc(sizeof(int));
     *port = 80;                      // default port 80
 
     memset(buf2ser, 0, sizeof(buf2ser)); 
@@ -245,8 +245,8 @@ void doit(int fd)
         Rio_writen(fd, ser_response, len);
         memset(ser_response, 0, sizeof(ser_response));
     }
-    gettimeofday(&end, NULL);
-    float time_use = (end.tv_sec-start.tv_sec)*1000000+(end.tv_usec-start.tv_usec);
+    gettimeofday(&end_t, NULL);
+    float time_use = (end_t.tv_sec-start.tv_sec)*1000000+(end_t.tv_usec-start.tv_usec);
     printf("time_use = %.1f us\n",time_use);
     printf("chunk_size = %.1f Kb\n",(float)chunk_size*8/1000);
     throughput_new=(float)chunk_size*8000/time_use;
@@ -259,7 +259,7 @@ void doit(int fd)
     close(serverfd);
     
     // output log
-    int time_epoch = end.tv_sec+end.tv_usec/1000000;
+    int time_epoch = end_t.tv_sec+end_t.tv_usec/1000000;
     float time_duration = time_use/1000000;
     // tput = throughput_new;
     // avg-tput = throughput_current;
@@ -585,4 +585,4 @@ void clienterror(int fd, char *cause, char *errnum,
     Rio_writen(fd, buf, strlen(buf));
     Rio_writen(fd, body, strlen(body));
 }
-/* $end clienterror */
+/* $end_t clienterror */
