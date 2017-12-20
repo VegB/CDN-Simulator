@@ -13,6 +13,8 @@ map<string, int> nodes;
 vector<string> server_ips;
 ofstream fout;
 clock_t starttime;
+struct timeval start;
+struct timeval end_t;
 
 int load_parameters(int argc, char* argv[]){
     if(argc == 6 || argc == 7){  // no '-r'
@@ -72,8 +74,10 @@ int handle_request(int fd){
     
     /* LOGGING */
     clock_t t = clock();
+    gettimeofday(&end_t, NULL);
+    float time_use = (end_t.tv_sec-start.tv_sec)*1000000+(end_t.tv_usec-start.tv_usec);
     fout.open(log_path.c_str(), ofstream::out | ofstream::app);
-    fout << t - starttime << " " << request.src_addr << " " << request.url << " " << selected_server << endl;
+    fout << time_use << " " << request.src_addr << " " << request.url << " " << selected_server << endl;
     fout.close();
     
     return 0;
@@ -90,6 +94,8 @@ void *thread(void *vargp){
 
 int main(int argc, char* argv[]){
 	starttime = clock();
+    gettimeofday(&start, NULL);
+    
 /* Read in parameters */
     if(load_parameters(argc, argv) == -1){
         return 0;
