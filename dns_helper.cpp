@@ -15,7 +15,7 @@
 int Distance[MAX][MAX];
 int pre[MAX][MAX];
 int node_num = 0;
-
+char blank = "00000000000000000000";
 // round-robin
 vector<string>::iterator tmp_server;
 
@@ -215,7 +215,8 @@ void init_dns_request(DNS_Packet& packet, const char* src_addr, const char* url)
     init_dns_header(packet, REQUEST);
     strcpy(packet.src_addr, src_addr);
     /* set URL */
-    //packet.url_len = url.length();
+    strcpy(packet.ip, blank);
+    strcpy(packet.url, blank);  // fill with '0'
     strcpy(packet.url, url);
     cout << "Request URL: " << packet.url << endl;
 }
@@ -225,7 +226,9 @@ void init_dns_response(DNS_Packet& packet, const char* src_addr, const char* ip)
     strcpy(packet.src_addr, src_addr);
     /* Set IP */
     //packet.ip_len = ip.length();
+    strcpy(packet.ip, blank);  // fill with '0'
     strcpy(packet.ip, ip);
+    strcpy(packet.url, blank);
     cout << "Response IP: " << packet.ip << endl;
 }
 
