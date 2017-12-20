@@ -8,6 +8,7 @@
 #include "mydns.h"
 
 int clientfd;
+char my_ip[20];
 
 /**
  * Initialize your client DNS library with the IP address and port number of
@@ -22,6 +23,7 @@ int clientfd;
 int init_mydns(const char *dns_ip, unsigned int dns_port, const char *client_ip){
     char port[10];
     sprintf(port, "%d", dns_port);
+    strcpy(my_ip, client_ip);
     clientfd = open_clientfd((char*)dns_ip, (char*)dns_port);
     if(clientfd == -1){
         return -1;
@@ -73,7 +75,7 @@ int resolve(const char *node, const char *service,
     ((sockaddr_in*) (*res)->ai_addr)->sin_port = ntohs(atoi(service));
     
     /* Create request packet */
-    init_dns_request(request, node);
+    init_dns_request(request, my_ip, node);  // here
     dns_packet_to_char(request, buffer);
 
     /* Connect to DNS server */
@@ -92,7 +94,8 @@ int resolve(const char *node, const char *service,
         char_to_dns_packet(buffer, response);
     }
     close(clientfd);
-
+    cout << "[mydns]: received response from " << response.src_addr << endl;
+    
     /* store result into res */
     ((sockaddr_in*)((*res)->ai_addr))->sin_addr.s_addr = inet_addr(response.ip);
     ((sockaddr_in*)((*res)->ai_addr))->sin_family = AF_INET;

@@ -211,18 +211,18 @@ string select_server(string src_ip, map<string, int> nodes,
     return rst;
 }
 
-void init_dns_request(DNS_Packet& packet, const char* url){
+void init_dns_request(DNS_Packet& packet, const char* src_addr, const char* url){
     init_dns_header(packet, REQUEST);
-    
+    strcpy(packet.src_addr, src_addr);
     /* set URL */
     //packet.url_len = url.length();
     strcpy(packet.url, url);
     cout << "Request URL: " << packet.url << endl;
 }
 
-void init_dns_response(DNS_Packet& packet, const char* ip){
+void init_dns_response(DNS_Packet& packet, const char* src_addr, const char* ip){
     init_dns_header(packet, RESPONSE);
-    
+    strcpy(packet.src_addr, src_addr);
     /* Set IP */
     //packet.ip_len = ip.length();
     strcpy(packet.ip, ip);

@@ -8,7 +8,7 @@
 #include "dns_helper.hpp"
 
 int use_round_robin = NO;
-string log_path, req_ip, port, server_ip_filepath, lsa_filepath;
+string log_path, my_ip, port, server_ip_filepath, lsa_filepath;
 map<string, int> nodes;
 vector<string> server_ips;
 
@@ -24,7 +24,7 @@ int load_parameters(int argc, char* argv[]){
             }
         }
         log_path = argv[argc - 5];
-        req_ip = argv[argc - 4];
+        my_ip = argv[argc - 4];
         port = argv[argc - 3];
         server_ip_filepath = argv[argc - 2];
         lsa_filepath = argv[argc - 1];
@@ -55,9 +55,9 @@ int handle_request(int fd){
     string selected_server = select_server(src_url, nodes,
                                            server_ips, use_round_robin);
     // LOGGING
-	cout << "time " << req_ip << " " << src_url << " " << selected_server << endl;
+	cout << "time " << request.src_addr << " " << src_url << " " << selected_server << endl;
     /* Create response */
-    init_dns_request(response, selected_server.c_str());
+    init_dns_response(response, my_ip.c_str(), selected_server.c_str());
     dns_packet_to_char(response, buffer);
     
     /* Send response */
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]){
         socklen_t clientaddr_len = sizeof(clientaddr);
         int* connfd = (int*)malloc(sizeof(int));
         *connfd = Accept(listenfd, (SA *)&clientaddr, &clientaddr_len);
-        printf("Accepted connection from (%s, %s)\n", req_ip.c_str(), port.c_str());
+        cout << "Accepted connection at " << my_ip << ", port " << port << endl;
         pthread_create(&tid, NULL, thread, connfd);
     }
     return 0;
