@@ -9,8 +9,8 @@
 
 int clientfd;
 char my_ip[BUFFER_SIZE];
-char dns_ip[BUFFER_SIZE];
-char dns_port[BUFFER_SIZE];
+char dns_ip_global[BUFFER_SIZE];
+char dns_port_global[BUFFER_SIZE];
 /**
  * Initialize your client DNS library with the IP address and port number of
  * your DNS server.
@@ -21,13 +21,11 @@ char dns_port[BUFFER_SIZE];
  *
  * @return 0 on success, -1 otherwise
  */
-int init_mydns(const char *dns_ip_, unsigned int dns_port_, const char *client_ip){
-    cout << "[mydns]: init_mydns(), dns_ip: " << dns_ip_ << ", dns port: " << dns_port_
+int init_mydns(const char *dns_ip, unsigned int dns_port, const char *client_ip){
+    cout << "[mydns]: init_mydns(), dns_ip: " << dns_ip << ", dns port: " << dns_port
     << ", client_ip: " << client_ip << endl;
-    char port[BUFFER_SIZE];
-    sprintf(port, "%d", dns_port_);
-    strcpy(dns_ip, dns_ip_);
-    strcpy(dns_port, port);
+    sprintf(dns_port_global, "%d", dns_port);
+    strcpy(dns_ip_global, dns_ip);
 	strcpy(my_ip, client_ip);
     cout << "dns_ip: " << dns_ip << ", dns_port: " << dns_port << endl;
     return 0;
@@ -81,7 +79,7 @@ int resolve(const char *node, const char *service,
     ((sockaddr_in*) (*res)->ai_addr)->sin_port = ntohs(atoi(service));
     
     /* Create Clientfd*/
-    clientfd = Open_clientfd((char*)dns_ip, (char*)dns_port);
+    clientfd = Open_clientfd((char*)dns_ip_global, (char*)dns_port_global);
     cout << "clientfd = " << clientfd << endl;
     if(clientfd == -1){
         return -1;
