@@ -85,7 +85,7 @@ int resolve(const char *node, const char *service,
     
     /* Create request packet */
     cout << "[mydns]: sending request" << endl;
-    init_dns_request(request, my_ip, node);  // here
+    init_dns_request(request, my_ip, node);
     dns_packet_to_char(request, buffer);
     
     /* send request to server */
