@@ -259,7 +259,7 @@ void dns_packet_to_char(DNS_Packet& packet, char* buffer){
     char* p = buffer + sizeof(struct DNS_Header);
     cout << "src_addr: " << p << endl;
     p += 20;
-    cout << "ip: " << p << enl;
+    cout << "ip: " << p << endl;
     p += 20;
     cout << "url: " << p << endl;
 }
