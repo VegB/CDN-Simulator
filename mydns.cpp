@@ -9,7 +9,8 @@
 
 int clientfd;
 char my_ip[BUFFER_SIZE];
-
+char dns_ip[BUFFER_SIZE];
+char dns_port[BUFFER_SIZE];
 /**
  * Initialize your client DNS library with the IP address and port number of
  * your DNS server.
@@ -20,18 +21,15 @@ char my_ip[BUFFER_SIZE];
  *
  * @return 0 on success, -1 otherwise
  */
-int init_mydns(const char *dns_ip, unsigned int dns_port, const char *client_ip){
-    cout << "[mydns]: init_mydns(), dns_ip: " << dns_ip << ", dns port: " << dns_port
+int init_mydns(const char *dns_ip_, unsigned int dns_port_, const char *client_ip){
+    cout << "[mydns]: init_mydns(), dns_ip: " << dns_ip_ << ", dns port: " << dns_port_
     << ", client_ip: " << client_ip << endl;
     char port[BUFFER_SIZE];
-    sprintf(port, "%d", dns_port);
+    sprintf(port, "%d", dns_port_);
+    strcpy(dns_ip, dns_ip_);
+    strcpy(dns_port, port);
 	strcpy(my_ip, client_ip);
     cout << "dns_ip: " << dns_ip << ", dns_port: " << dns_port << endl;
-	clientfd = Open_clientfd((char*)dns_ip, (char*)port);
-	cout << "clientfd = " << clientfd << endl;
-	if(clientfd == -1){
-        return -1;
-    }
     return 0;
 }
 
@@ -82,6 +80,13 @@ int resolve(const char *node, const char *service,
     (*res)->ai_addr = (sockaddr*) malloc(sizeof(sockaddr));
     ((sockaddr_in*) (*res)->ai_addr)->sin_port = ntohs(atoi(service));
     
+    /* Create Clientfd*/
+    clientfd = Open_clientfd((char*)dns_ip, (char*)port);
+    cout << "clientfd = " << clientfd << endl;
+    if(clientfd == -1){
+        return -1;
+    }
+    
     /* Create request packet */
     cout << "[mydns]: sending request" << endl;
     init_dns_request(request, my_ip, node);
@@ -98,7 +103,7 @@ int resolve(const char *node, const char *service,
     while(rio_readnb(&rio, buffer, sizeof(struct DNS_Packet)) > 0) {
         char_to_dns_packet(buffer, response);
     }
-    // close(clientfd);
+    close(clientfd);
     cout << "[mydns]: received response from " << response.src_addr << endl;
     
     /* store result into res */
@@ -115,8 +120,6 @@ int resolve(const char *node, const char *service,
  * @return 0 on success, -1 otherwise
  */
 int mydns_freeaddrinfo(struct addrinfo *p){
-    close(clientfd);
-
 	if(p->ai_addr != NULL){
         free(p->ai_addr);
     }
