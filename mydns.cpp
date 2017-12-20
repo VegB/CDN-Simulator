@@ -21,6 +21,8 @@ char my_ip[20];
  * @return 0 on success, -1 otherwise
  */
 int init_mydns(const char *dns_ip, unsigned int dns_port, const char *client_ip){
+    cout << "[mydns]: init_mydns(), dns_ip: " << dns_ip << ", dns port: " << dns_port
+    << ", client_ip: " << client_ip << endl;
     char port[10];
     sprintf(port, "%d", dns_port);
     strcpy(my_ip, client_ip);
@@ -58,6 +60,9 @@ int init_mydns(const char *dns_ip, unsigned int dns_port, const char *client_ip)
 
 int resolve(const char *node, const char *service,
             const struct addrinfo *hints, struct addrinfo **res){
+    cout << "[mydns]: resolve(). asking for node: " << node << ",  service: "
+    << service << endl;
+    
     char buffer[BUFFER_SIZE];
     DNS_Packet request, response;
     int clientfd;
@@ -75,20 +80,22 @@ int resolve(const char *node, const char *service,
     ((sockaddr_in*) (*res)->ai_addr)->sin_port = ntohs(atoi(service));
     
     /* Create request packet */
+    cout << "[mydns]: sending request" << endl;
     init_dns_request(request, my_ip, node);  // here
     dns_packet_to_char(request, buffer);
 
-    /* Connect to DNS server */
-    if((clientfd = open_clientfd((char*)node, (char*)service)) < 0){
-        cerr << "[mydns]: open clientfd failed!" << endl;
-        return -1;
-    }
+//    /* Connect to DNS server */
+//    if((clientfd = open_clientfd((char*)node, (char*)service)) < 0){
+//        cerr << "[mydns]: open clientfd failed!" << endl;
+//        return -1;
+//    }
     
     /* send request to server */
     Rio_readinitb(&rio, clientfd);
     Rio_writen(clientfd, buffer, sizeof(request));
     
     /* recieve the response from the server */
+    cout << "[mydns]: waiting for response" << endl;
     memset(buffer, 0, sizeof(response));
     while(rio_readnb(&rio, buffer, BUFFER_SIZE) > 0) {
         char_to_dns_packet(buffer, response);
