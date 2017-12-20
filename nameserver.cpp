@@ -51,17 +51,23 @@ int handle_request(int fd){
     char_to_dns_packet(buffer, request);
     string src_url(request.url);
     
+    cout << "[Nameserver]: handling request from " << request.src_addr << " for "
+    << src_url << endl;
+    
     /* Select server to return */
     string selected_server = select_server(src_url, nodes,
                                            server_ips, use_round_robin);
+    cout << "[Nameserver]: Selected " << selected_server << endl;
     // LOGGING
-	cout << "time " << request.src_addr << " " << src_url << " " << selected_server << endl;
+    // cout << "time " << request.src_addr << " " << src_url << " " << selected_server << endl;
+    
     /* Create response */
     init_dns_response(response, my_ip.c_str(), selected_server.c_str());
     dns_packet_to_char(response, buffer);
     
     /* Send response */
     Rio_writen(fd, buffer, sizeof(response));
+    cout << "[Nameserver]: response sent" << endl;
     return 0;
 }
 
@@ -79,12 +85,15 @@ int main(int argc, char* argv[]){
     if(load_parameters(argc, argv) == -1){
         return 0;
     }
-    cout << port << endl;
+    cout << "[Nameserver]: IP = " << my_ip << ", port = " << port << endl;
+    
     /* Load server replicas' IP */
+    cout << "[Nameserver]: Loading server replicas' IP" << endl;
     LoadServersIP(server_ips, server_ip_filepath);
     // string tmp_server = server_ips.begin();  // used in round-robin
     
     /* Get LSA info and build up a graph with Distance info */
+    cout << "[Nameserver]: Get LSA info and build up a graph with Distance info" << endl;
     init_Distance();
     LoadLSA(nodes, lsa_filepath);
     
@@ -97,10 +106,10 @@ int main(int argc, char* argv[]){
     pthread_t tid;
     struct sockaddr_in clientaddr;
     while (1) {
+        cout << "[Nameserver]: Waiting for connection." << endl;
         socklen_t clientaddr_len = sizeof(clientaddr);
         int* connfd = (int*)malloc(sizeof(int));
         *connfd = Accept(listenfd, (SA *)&clientaddr, &clientaddr_len);
-        cout << "Accepted connection at " << my_ip << ", port " << port << endl;
         pthread_create(&tid, NULL, thread, connfd);
     }
     return 0;
