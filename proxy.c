@@ -171,6 +171,7 @@ void doit(int fd)
     // find .f4m in uri
     if (uri_found_f4m(uri, uri_nolist) != 0){
         // request .f4m from server, but do not give it to client
+        cout << "[Proxy]: before binding, hostname: " << hostname << ", port2: " << port2 << endl;
         if ((serverfd = open_clientfd_bind_fake_ip(hostname, port2, fake_ip)) < 0){
             fprintf(stderr, "open server fd error\n");
             return;
